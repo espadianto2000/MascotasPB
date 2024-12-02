@@ -1,5 +1,6 @@
 import firestore from '@react-native-firebase/firestore';
 import { FB_COLLECTION_GROUPS } from '@env';
+import { FB_FUNCTION_URL } from '@env';
 
 export const getGroups = async (user: any) => {
   try {
@@ -22,10 +23,86 @@ export const getGroups = async (user: any) => {
   }
 };
 
-export const deleteGroup = async (groupId: string) => {};
+export const deleteGroup = async (groupId: string, token: string) => {
+  try {
+    const data = { id: groupId };
+    const response = await fetch(`${FB_FUNCTION_URL}/group/delete-group`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const responseData = await response.json();
+    console.log('Response Data:', responseData);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
 
-export const createGroup = async (name: string) => {};
+export const createGroup = async (name: string, token: string) => {
+  try {
+    const data = { name };
+    const response = await fetch(`${FB_FUNCTION_URL}/group/create-group`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const responseData = await response.json();
+    console.log('Response Data:', responseData);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
 
-export const joinGroup = async (code: string) => {};
+export const joinGroup = async (code: string, token: string) => {
+  try {
+    const data = { id: code };
+    const response = await fetch(`${FB_FUNCTION_URL}/group/join-group`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const responseData = await response.json();
+    console.log('Response Data:', responseData);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
 
-export const leaveGroup = async (code: string) => {};
+export const leaveGroup = async (code: string, token: string) => {
+  try {
+    const data = { id: code };
+    const response = await fetch(`${FB_FUNCTION_URL}/group/leave-group`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const responseData = await response.json();
+    console.log('Response Data:', responseData);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};

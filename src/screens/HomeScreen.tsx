@@ -44,7 +44,7 @@ export default function HomeScreen() {
   const [joinGroupModalVisible, setJoinGroupModalVisible] = useState(false);
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -77,22 +77,22 @@ export default function HomeScreen() {
   };
   const handleCreateGroup = async (groupName: string) => {
     console.log('Creating group:', groupName);
-    await createGroup(groupName);
+    await createGroup(groupName, token || '');
   };
 
   const handleJoinGroup = async (groupCode: string) => {
     console.log('Joining group with code:', groupCode);
-    await joinGroup(groupCode);
+    await joinGroup(groupCode, token || '');
   };
 
-  const handleDeleteGroup = async (groupCode: string) => {
-    console.log('deleting group:', groupCode);
-    await deleteGroup(groupCode);
+  const handleDeleteGroup = async () => {
+    console.log('deleting group:', selectedGroupId);
+    await deleteGroup(selectedGroupId || '', token || '');
   };
 
-  const handleLeaveGroup = async (groupCode: string) => {
-    console.log('Leave group with code:', groupCode);
-    await joinGroup(groupCode);
+  const handleLeaveGroup = async () => {
+    console.log('Leave group with code:', selectedGroupId);
+    await joinGroup(selectedGroupId || '', token || '');
   };
 
   const renderGroupCard = ({ item }) => (
@@ -240,7 +240,10 @@ export default function HomeScreen() {
                 Edit
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleDeleteGroup}
+            >
               <Text style={[styles.menuText, isDarkMode && styles.darkText]}>
                 Delete
               </Text>
