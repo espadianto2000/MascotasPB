@@ -14,6 +14,7 @@ export const getGroups = async (user: any) => {
       ...doc.data(),
       membersCount: doc.data().members.length,
       petsCount: doc.data().pets.length,
+      owned: doc.data().creator_id === user.uid,
     }));
     console.log('Fetched groups:', groups);
     return groups;

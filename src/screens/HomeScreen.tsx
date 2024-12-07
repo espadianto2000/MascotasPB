@@ -21,6 +21,7 @@ import {
 } from '../actions/GroupActions';
 import CreateGroupModal from '../modals/create-group.modal';
 import JoinGroupModal from '../modals/join-group.modal';
+import ConfirmationModal from '../modals/confirmation.modal';
 
 type HomeScreenNavigationProp = StackNavigationProp<StackParamList, 'Home'>;
 
@@ -40,28 +41,39 @@ export default function HomeScreen() {
   const [userMenuVisible, setUserMenuVisible] = useState(false);
   const [groupMenuVisible, setGroupMenuVisible] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [createGroupModalVisible, setCreateGroupModalVisible] = useState(false);
   const [joinGroupModalVisible, setJoinGroupModalVisible] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
+  const [confirmTitle, setConfirmTitle] = useState<string>('');
+  const [confirmMessage, setConfirmMessage] = useState<string>('');
+
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const { user, token } = useAuth();
 
   useEffect(() => {
+    getGroupsHome();
+  }, [user]);
+
+  const getGroupsHome = () => {
     if (user) {
       getGroups(user)
         .then(fetchedGroups => {
           setGroups(fetchedGroups);
-          setOwnedGroups(fetchedGroups.filter(g => g.creator_id === user.uid));
+          setOwnedGroups(fetchedGroups.filter(g => g.owned));
           setLoading(false);
         })
         .catch(error => {
           console.error('Error fetching groups:', error.message);
         });
     }
-  }, [user]);
+  };
 
   const openGroupMenu = (groupId: string) => {
     setSelectedGroupId(groupId);
+    setSelectedGroup(groups.find(g => g.id === groupId));
     setGroupMenuVisible(true);
   };
 
@@ -78,21 +90,49 @@ export default function HomeScreen() {
   const handleCreateGroup = async (groupName: string) => {
     console.log('Creating group:', groupName);
     await createGroup(groupName, token || '');
+    getGroupsHome();
   };
 
   const handleJoinGroup = async (groupCode: string) => {
     console.log('Joining group with code:', groupCode);
     await joinGroup(groupCode, token || '');
+    getGroupsHome();
   };
 
   const handleDeleteGroup = async () => {
     console.log('deleting group:', selectedGroupId);
     await deleteGroup(selectedGroupId || '', token || '');
+    getGroupsHome();
+  };
+
+  const pressDeleteGroup = async () => {
+    setConfirmAction(() => async () => {
+      await handleDeleteGroup();
+    });
+    setConfirmTitle('Delete group');
+    setConfirmMessage(
+      'Are you sure you want to delete this group? This action cannot be undone.',
+    );
+    setShowConfirmModal(true);
+    setGroupMenuVisible(false);
   };
 
   const handleLeaveGroup = async () => {
     console.log('Leave group with code:', selectedGroupId);
     await joinGroup(selectedGroupId || '', token || '');
+    getGroupsHome();
+  };
+
+  const pressLeaveGroup = async () => {
+    setConfirmAction(() => async () => {
+      await handleLeaveGroup();
+    });
+    setConfirmTitle('Leave group');
+    setConfirmMessage(
+      'Are you sure you want to leave this group? This action cannot be undone.',
+    );
+    setShowConfirmModal(true);
+    setGroupMenuVisible(false);
   };
 
   const renderGroupCard = ({ item }) => (
@@ -240,17 +280,39 @@ export default function HomeScreen() {
                 Edit
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleDeleteGroup}
-            >
-              <Text style={[styles.menuText, isDarkMode && styles.darkText]}>
-                Delete
-              </Text>
-            </TouchableOpacity>
+            {selectedGroup && selectedGroup.owned ? (
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={pressDeleteGroup}
+              >
+                <Text style={[styles.menuText, isDarkMode && styles.darkText]}>
+                  Delete
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={pressLeaveGroup}
+              >
+                <Text style={[styles.menuText, isDarkMode && styles.darkText]}>
+                  Leave
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </TouchableOpacity>
       </Modal>
+
+      <ConfirmationModal
+        isVisible={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={confirmAction}
+        title={confirmTitle}
+        message={confirmMessage}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
+
       <CreateGroupModal
         visible={createGroupModalVisible}
         onClose={() => setCreateGroupModalVisible(false)}
